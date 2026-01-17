@@ -18,7 +18,7 @@ st.markdown(
 # --------------------------------------------------
 @st.cache_data
 def load_data():
-    return pd.read_excel("data/input data.xlsx")
+return pd.read_excel("input data.xlsx")
 
 df = load_data()
 
