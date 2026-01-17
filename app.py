@@ -10,37 +10,36 @@ st.set_page_config(page_title="Geopolymer Pervious Concrete Predictor")
 
 st.title("🧱 Geopolymer Pervious Concrete – ML Prediction App")
 st.markdown(
-    "Predict **Porosity**, **Permeability**, and **Clogging Rate** using ONE unified application"
+    "Predict **Porosity**, **Permeability**, and **Clogging Rate** using a unified ML model"
 )
 
 # --------------------------------------------------
-# Upload data
+# Load training data (NO USER UPLOAD)
 # --------------------------------------------------
-st.sidebar.header("📂 Upload Training Data")
+@st.cache_data
+def load_data():
+    return pd.read_excel("data/input data.xlsx")
 
-uploaded_file = st.sidebar.file_uploader(
-    "Upload input data.xlsx",
-    type=["xlsx"]
-)
+df = load_data()
 
+# --------------------------------------------------
+# Train models (cached)
+# --------------------------------------------------
 @st.cache_resource
 def train_models(df):
-    """Train all three models once and cache them"""
 
-    # -------- Porosity --------
+    # Porosity
     X_poro = df.drop(columns=["Porosity_percent"])
     y_poro = df["Porosity_percent"]
-
     poro_model = Pipeline([
         ("scaler", StandardScaler()),
         ("model", BayesianRidge())
     ])
     poro_model.fit(X_poro, y_poro)
 
-    # -------- Permeability --------
+    # Permeability
     X_perm = df.drop(columns=["Permeability_mm_hr"])
     y_perm = df["Permeability_mm_hr"]
-
     perm_model = Pipeline([
         ("scaler", StandardScaler()),
         ("model", XGBRegressor(
@@ -51,10 +50,9 @@ def train_models(df):
     ])
     perm_model.fit(X_perm, y_perm)
 
-    # -------- Clogging --------
+    # Clogging
     X_clog = df.drop(columns=["Clogging_Rate_percent_per_year"])
     y_clog = df["Clogging_Rate_percent_per_year"]
-
     clog_model = Pipeline([
         ("scaler", StandardScaler()),
         ("model", XGBRegressor(
@@ -68,21 +66,13 @@ def train_models(df):
     return poro_model, perm_model, clog_model
 
 
-if uploaded_file is None:
-    st.warning("⬅️ Please upload `input data.xlsx` to start")
-    st.stop()
-
-# Load data
-df = pd.read_excel(uploaded_file)
-
-# Train models (cached)
-with st.spinner("🔄 Training ML models (first run only)..."):
+with st.spinner("🔄 Initializing ML models..."):
     poro_model, perm_model, clog_model = train_models(df)
 
-st.success("✅ Models trained successfully")
+st.success("✅ Models ready")
 
 # --------------------------------------------------
-# Input parameters
+# User inputs
 # --------------------------------------------------
 st.sidebar.header("🔧 Input Parameters")
 
